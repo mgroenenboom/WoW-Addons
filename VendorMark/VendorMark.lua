@@ -120,13 +120,19 @@ end
 -- Selling
 ---------------------------------------------------------------------------
 
-local function CollectMarkedSlots()
+local function HasBuiltInJunkSell()
+    return C_MerchantFrame and C_MerchantFrame.SellAllJunkItems ~= nil
+end
+
+local function CollectMarkedSlots(includeGrays)
     local slots = {}
     local lastBag = NUM_TOTAL_EQUIPPED_BAG_SLOTS or NUM_BAG_SLOTS or 4
     for bag = 0, lastBag do
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
             local info = C_Container.GetContainerItemInfo(bag, slot)
-            if info and IsMarked(info.itemID) and not info.hasNoValue and not info.isLocked then
+            local wanted = info and (IsMarked(info.itemID)
+                or (includeGrays and info.quality == Enum.ItemQuality.Poor))
+            if wanted and not info.hasNoValue and not info.isLocked then
                 slots[#slots + 1] = { bag = bag, slot = slot, itemID = info.itemID }
             end
         end
@@ -135,7 +141,7 @@ local function CollectMarkedSlots()
 end
 
 local function SellJunk()
-    if C_MerchantFrame and C_MerchantFrame.SellAllJunkItems then
+    if HasBuiltInJunkSell() then
         if not C_MerchantFrame.IsSellAllJunkEnabled or C_MerchantFrame.IsSellAllJunkEnabled() then
             C_MerchantFrame.SellAllJunkItems()
         end
@@ -164,7 +170,7 @@ local function SellMarked(queue, index, sold)
     else
         selling = false
         if sold > 0 then
-            Print(("Sold %d marked item stack(s)."):format(sold))
+            Print(("Sold %d item stack(s)."):format(sold))
         end
     end
 end
@@ -179,7 +185,8 @@ function VM:SellAll()
 
     SellJunk()
 
-    local queue = CollectMarkedSlots()
+    -- If the client has no built-in junk seller, sell gray items ourselves.
+    local queue = CollectMarkedSlots(not HasBuiltInJunkSell())
     if #queue == 0 then
         selling = false
         return
