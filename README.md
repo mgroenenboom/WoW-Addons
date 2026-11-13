@@ -11,4 +11,4 @@ Mark items in your bags to sell the next time you visit a vendor, then sell them
 
 **Slash commands:** `/vm list`, `/vm clear`, `/vm sell`
 
-**Install:** Copy the `VendorMark` folder into `World of Warcraft/_retail_/Interface/AddOns/`.
+**Install:** Copy the `VendorMark` folder into `World of Warcraft/_forever_/Interface/AddOns/` (WoW Forever) or `World of Warcraft/_retail_/Interface/AddOns/` (retail).
