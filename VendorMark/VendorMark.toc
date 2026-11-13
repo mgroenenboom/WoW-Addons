@@ -1,0 +1,8 @@
+## Interface: 120000, 120001, 120005
+## Title: VendorMark
+## Notes: Alt+Click bag items to mark them for vendoring, then sell them (plus junk) with one button at a merchant.
+## Author: mgroenenboom
+## Version: 1.0.0
+## SavedVariablesPerCharacter: VendorMarkDB
+
+VendorMark.lua
