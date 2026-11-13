@@ -39,15 +39,19 @@ local function UpdateButtonOverlay(button)
     overlay:SetShown(IsMarked(GetButtonItemID(button)))
 end
 
-local function ToggleMark(itemID)
-    if not itemID then return end
-    local name = C_Item.GetItemNameByID(itemID) or ("item " .. itemID)
+local function ToggleMark(button)
+    local bag, slot = button:GetBagID(), button:GetID()
+    local info = bag and slot and C_Container.GetContainerItemInfo(bag, slot)
+    if not info or not info.itemID then return end
+    local itemID = info.itemID
+    local name = info.hyperlink or C_Item.GetItemNameByID(itemID) or ("item " .. itemID)
     if VendorMarkDB.items[itemID] then
         VendorMarkDB.items[itemID] = nil
         Print("Unmarked " .. name)
     else
-        local sellPrice = select(11, C_Item.GetItemInfo(itemID))
-        if sellPrice == 0 then
+        -- Use the bag slot's own "no value" flag: it's what the vendor itself
+        -- checks, and unlike item info it's always available for bag items.
+        if info.hasNoValue then
             Print(name .. " has no vendor value; it can't be sold.")
             return
         end
@@ -71,7 +75,7 @@ local function HookButton(button)
     button:HookScript("OnClick", function(self, mouseButton)
         if mouseButton == "LeftButton" and IsAltKeyDown()
             and not IsShiftKeyDown() and not IsControlKeyDown() then
-            ToggleMark(GetButtonItemID(self))
+            ToggleMark(self)
         end
     end)
 end
@@ -208,10 +212,10 @@ local function AnchorSellButton()
     local backpack = ContainerFrame1
     if combined and combined:IsShown() then
         sellButton:SetParent(combined)
-        sellButton:SetPoint("BOTTOMRIGHT", combined, "TOPRIGHT", -4, 2)
+        sellButton:SetPoint("TOPRIGHT", combined, "BOTTOMRIGHT", -4, -2)
     elseif backpack and backpack:IsShown() then
         sellButton:SetParent(backpack)
-        sellButton:SetPoint("BOTTOMRIGHT", backpack, "TOPRIGHT", -4, 2)
+        sellButton:SetPoint("TOPRIGHT", backpack, "BOTTOMRIGHT", -4, -2)
     else
         sellButton:SetParent(MerchantFrame)
         sellButton:SetPoint("TOPRIGHT", MerchantFrame, "BOTTOMRIGHT", 0, -2)
@@ -223,6 +227,7 @@ end
 local function CreateSellButton()
     sellButton = CreateFrame("Button", "VendorMarkSellButton", UIParent, "UIPanelButtonTemplate")
     sellButton:SetSize(150, 22)
+    sellButton:SetClampedToScreen(true) -- stay visible if the bags sit at the screen's bottom edge
     sellButton:SetText("Sell Marked + Junk")
     sellButton:SetScript("OnClick", function() VM:SellAll() end)
     sellButton:SetScript("OnEnter", function(self)
